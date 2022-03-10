@@ -1,0 +1,181 @@
+{
+  "kind": "RootContainer",
+  "uuid": "b9c3268a-e987-472e-9f96-aee2f696b31c",
+  "children": [
+    {
+      "uuid": "5c4fd9b3-3299-4e9f-846d-26945e54a9bf",
+      "kind": "FormteilContainer",
+      "children": [
+        {
+          "uuid": "0a32a79a-6749-4edf-891d-ad9675f43b94",
+          "kind": "FormteilContainer",
+          "children": [
+            {
+              "uuid": "f1d91023-9d33-406b-82bb-6d50aecfe10e",
+              "kind": "FormteilContainer",
+              "children": [
+                {
+                  "uuid": "71ad3ba6-d86f-45c3-b60b-8323f58896e3",
+                  "kind": "ParatextContainer",
+                  "text": "Test",
+                  "retro": false,
+                  "paratextType": "Formteil"
+                },
+                {
+                  "uuid": "112eef3a-f25a-44ec-a116-00cd75020c22",
+                  "kind": "ZeileContainer",
+                  "children": [
+                    {
+                      "uuid": "18c35a19-bd03-403e-aac6-e5d71befa20c",
+                      "kind": "Syllable",
+                      "text": "A-",
+                      "syllableType": "Normal",
+                      "notes": {
+                        "spaced": [
+                          {
+                            "nonSpaced": [
+                              {
+                                "grouped": [
+                                  {
+                                    "uuid": "fd1a2c01-fac7-48aa-ba9e-72d39920eb85",
+                                    "base": "A",
+                                    "octave": 4,
+                                    "noteType": "Normal",
+                                    "focus": false,
+                                    "liquescent": false
+                                  }
+                                ]
+                              },
+                              {
+                                "grouped": [
+                                  {
+                                    "uuid": "849cd688-75c6-4a14-af49-f6b3f204c9e0",
+                                    "base": "B",
+                                    "octave": 4,
+                                    "noteType": "Normal",
+                                    "focus": false,
+                                    "liquescent": false
+                                  }
+                                ]
+                              },
+                              {
+                                "grouped": [
+                                  {
+                                    "uuid": "fa8bc32e-1d55-4799-82d0-402376b9e63d",
+                                    "base": "C",
+                                    "octave": 4,
+                                    "noteType": "Normal",
+                                    "focus": false,
+                                    "liquescent": false
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "uuid": "10cbc14b-384b-472c-a9e9-4f4b359548e7",
+                      "kind": "Syllable",
+                      "text": "men",
+                      "syllableType": "Normal",
+                      "notes": {
+                        "spaced": [
+                          {
+                            "nonSpaced": [
+                              {
+                                "grouped": [
+                                  {
+                                    "uuid": "f4000be3-9a6f-4455-bad3-cbefd391ab33",
+                                    "base": "D",
+                                    "octave": 4,
+                                    "noteType": "Oriscus",
+                                    "focus": false,
+                                    "liquescent": false
+                                  }
+                                ]
+                              },
+                              {
+                                "grouped": [
+                                  {
+                                    "uuid": "a976a6e7-f960-4c14-b3ec-08fab7cc8830",
+                                    "base": "E",
+                                    "octave": 4,
+                                    "noteType": "Quilisma",
+                                    "focus": false,
+                                    "liquescent": false
+                                  }
+                                ]
+                              },
+                              {
+                                "grouped": [
+                                  {
+                                    "uuid": "2e437616-2d39-41f4-82a2-6f1bda11fe1b",
+                                    "base": "F",
+                                    "octave": 4,
+                                    "noteType": "Strophicus",
+                                    "focus": false,
+                                    "liquescent": false
+                                  }
+                                ]
+                              },
+                              {
+                                "grouped": [
+                                  {
+                                    "uuid": "1e8b26c1-ec76-4e7e-8e2e-17ca3c945c15",
+                                    "base": "A",
+                                    "octave": 4,
+                                    "noteType": "Ascending",
+                                    "focus": false,
+                                    "liquescent": false
+                                  }
+                                ]
+                              },
+                              {
+                                "grouped": [
+                                  {
+                                    "uuid": "b961d25b-37c8-419c-ad73-ad647a32d944",
+                                    "base": "B",
+                                    "octave": 4,
+                                    "noteType": "Descending",
+                                    "focus": true,
+                                    "liquescent": false
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ],
+              "data": [
+                {
+                  "name": "Signatur",
+                  "data": ""
+                }
+              ]
+            }
+          ],
+          "data": [
+            {
+              "name": "Signatur",
+              "data": ""
+            }
+          ]
+        }
+      ],
+      "data": [
+        {
+          "name": "Signatur",
+          "data": ""
+        }
+      ]
+    }
+  ],
+  "comments": [],
+  "documentType": "Level3"
+}
