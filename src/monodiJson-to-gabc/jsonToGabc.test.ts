@@ -70,17 +70,36 @@ annotation: 20
                                 {}
                             ]
                         }]
-                    }]
-            };`;
-            doc.transform(ex);
-            const out = JSON.stringify(doc.getFlatStaffs());
-            expect(out).to.equal(`{
+                    },
+                    {
+                        "uuid": "5c4fd9b3-3299-4e9f-846d-26945e54a9bf",
+                        "kind": "FormteilContainer",
+                        "children": [{
                             "uuid": "112eef3a-f25a-44ec-a116-00cd75020c22",
                             "kind": "ZeileContainer",
                             "children": [
                                 {}
                             ]
-                        }`)
+                        }]
+                    }
+                    ]
+            }`;
+            doc.transform(ex);
+            const out = JSON.stringify(doc.getFlatStaffs());
+            expect(out).to.equal(JSON.stringify([{
+                "uuid": "112eef3a-f25a-44ec-a116-00cd75020c22",
+                "kind": "ZeileContainer",
+                "children": [
+                    {}
+                ]
+            },
+                {
+                    "uuid": "112eef3a-f25a-44ec-a116-00cd75020c22",
+                    "kind": "ZeileContainer",
+                    "children": [
+                        {}
+                    ]
+                }]))
         })
     })
 });

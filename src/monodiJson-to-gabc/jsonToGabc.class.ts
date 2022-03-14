@@ -1,5 +1,5 @@
 export default class JsonToGabcConverter {
-    private _data: any = {};
+    private _data: any = "";
     hasHeader = false;
     positionInAlphabet;
     existsZeileContainer;
@@ -121,7 +121,7 @@ export default class JsonToGabcConverter {
     }
 
     getFlatStaffs() {
-        this.flatStaffRecur(this._data['children']);
+        return this.flatStaffRecur(this._data['children']);
     }
 
     transform(data: string) {
