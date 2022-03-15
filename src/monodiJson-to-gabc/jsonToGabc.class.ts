@@ -10,7 +10,7 @@ export default class JsonToGabcConverter {
     constructor() {
         this.positionInAlphabet = (position_input_alphabet: number, octave: number,
                                    input_alphabet: string, clef_position: number) =>
-            position_input_alphabet + ((octave-4) * input_alphabet.length) - ((clef_position - 1) * 2)+2
+            position_input_alphabet + ((octave - 4) * input_alphabet.length) - ((clef_position - 1) * 2) + 2
         this.existsZeileContainer = (d: any) => d
             .map((e: any) => e['kind'] === "ZeileContainer")
             .filter((e: boolean) => e).length !== 0;
@@ -95,12 +95,13 @@ export default class JsonToGabcConverter {
         if (position_in_greg < 0 || position_in_greg >= gregorio_alphabet.length) {
             return this.find_other_clef(clef_position, position_of_ps, octave, monodi_alphabet, gregorio_alphabet);
         } else {
-            return {clef_change: false, char: gregorio_alphabet[position_in_greg]};
+            return {clef_change: false, clef: clef_position, char: gregorio_alphabet[position_in_greg]};
         }
     }
 
     transform_syllable(syllable: any) {
-        const text = syllable['text'];
+        const text = syllable['text'].replace("-", "").replace(" ", "");
+        const wordWhitespace = syllable['text'].match("-") ? "" : " ";
         const notation = syllable['notes']['spaced'].map((spaced: any) => {
             return spaced['nonSpaced'].map((nonspaced: any) => {
                 return nonspaced['grouped'].map((grouped: any) => {
@@ -108,8 +109,11 @@ export default class JsonToGabcConverter {
                 })
             })
         });
-        console.log(text, notation.flat(3));
-        return notation;
+        const notes = notation.flat(3).map((d: any) => d.char);
+        const clef = notation.flat(3).map((d: any) => d.clef);
+
+        console.log(text, clef, notes);
+        return `${text}(${notes.join("")})${wordWhitespace}`;
     }
 
 
@@ -144,11 +148,11 @@ export default class JsonToGabcConverter {
         const l = lines.reduce((out: any, lineContent: any) => {
             if (lineContent['kind'] === "ParatextContainer") return "";
             return [...out, lineContent['children'].reduce((out2: any, syl: any) => {
+
                 return [...out2, this.transform_syllable(syl)]
             }, [])];
         }, [])
-        //console.log(l.flat(4));
-        return "";
+        return l.flat().join("");
     }
 
     transform_file(path: string) {

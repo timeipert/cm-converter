@@ -94,12 +94,13 @@ var JsonToGabcConverter = (function () {
             return this.find_other_clef(clef_position, position_of_ps, octave, monodi_alphabet, gregorio_alphabet);
         }
         else {
-            return { clef_change: false, char: gregorio_alphabet[position_in_greg] };
+            return { clef_change: false, clef: clef_position, char: gregorio_alphabet[position_in_greg] };
         }
     };
     JsonToGabcConverter.prototype.transform_syllable = function (syllable) {
         var _this = this;
-        var text = syllable['text'];
+        var text = syllable['text'].replace("-", "").replace(" ", "");
+        var wordWhitespace = syllable['text'].match("-") ? "" : " ";
         var notation = syllable['notes']['spaced'].map(function (spaced) {
             return spaced['nonSpaced'].map(function (nonspaced) {
                 return nonspaced['grouped'].map(function (grouped) {
@@ -107,8 +108,10 @@ var JsonToGabcConverter = (function () {
                 });
             });
         });
-        console.log(text, notation.flat(3));
-        return notation;
+        var notes = notation.flat(3).map(function (d) { return d.char; });
+        var clef = notation.flat(3).map(function (d) { return d.clef; });
+        console.log(text, clef, notes);
+        return "".concat(text, "(").concat(notes.join(""), ")").concat(wordWhitespace);
     };
     Object.defineProperty(JsonToGabcConverter.prototype, "data", {
         get: function () {
@@ -147,7 +150,7 @@ var JsonToGabcConverter = (function () {
                     return __spreadArray(__spreadArray([], out2, true), [_this.transform_syllable(syl)], false);
                 }, [])], false);
         }, []);
-        return "";
+        return l.flat().join("");
     };
     JsonToGabcConverter.prototype.transform_file = function (path) {
         var _this = this;
