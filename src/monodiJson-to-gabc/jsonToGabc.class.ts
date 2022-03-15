@@ -1,5 +1,8 @@
+import * as fs from 'fs';
+
 export default class JsonToGabcConverter {
     private _data: any = "";
+    dataOut: string;
     hasHeader = false;
     positionInAlphabet;
     existsZeileContainer;
@@ -7,7 +10,7 @@ export default class JsonToGabcConverter {
     constructor() {
         this.positionInAlphabet = (position_input_alphabet: number, octave: number,
                                    input_alphabet: string, clef_position: number) =>
-            position_input_alphabet + (octave * input_alphabet.length) - ((clef_position - 1) * 2)
+            position_input_alphabet + ((octave-4) * input_alphabet.length) - ((clef_position - 1) * 2)+2
         this.existsZeileContainer = (d: any) => d
             .map((e: any) => e['kind'] === "ZeileContainer")
             .filter((e: boolean) => e).length !== 0;
@@ -75,16 +78,16 @@ export default class JsonToGabcConverter {
 
         const position_ratings = other_positions.map(d => Math.abs(d - (gregorio_alphabet.length / 2)));
         const best_clef = other_clefs[position_ratings.indexOf(Math.min(...position_ratings))];
-        console.log(best_clef)
+        console.log("Best clef: ", best_clef)
         const position_in_greg_bc = this.positionInAlphabet(position_of_ps, octave, monodi_alphabet, best_clef);
-        console.log(position_in_greg_bc);
+        console.log("Position in greg: ", position_in_greg_bc);
         return {clef_change: true, clef: best_clef, char: gregorio_alphabet[position_in_greg_bc]};
     }
 
     // clef position from top line 1 - 4
-    to_gregorio_char(pitch_symbol: string, octave: number, clef_position: number = 1) {
+    transform_note(pitch_symbol: string, octave: number, clef_position: number = 2) {
         const gregorio_alphabet = "abcdefghijklm";
-        const monodi_alphabet = "abcdefg";
+        const monodi_alphabet = "cdefgab";
 
 
         const position_of_ps = monodi_alphabet.indexOf(pitch_symbol);
@@ -96,13 +99,19 @@ export default class JsonToGabcConverter {
         }
     }
 
-    create_syllable() {
-
+    transform_syllable(syllable: any) {
+        const text = syllable['text'];
+        const notation = syllable['notes']['spaced'].map((spaced: any) => {
+            return spaced['nonSpaced'].map((nonspaced: any) => {
+                return nonspaced['grouped'].map((grouped: any) => {
+                    return this.transform_note(grouped['base'].toLowerCase(), grouped['octave'])
+                })
+            })
+        });
+        console.log(text, notation.flat(3));
+        return notation;
     }
 
-    create_note() {
-
-    }
 
     // @ts-ignore
     get data() {
@@ -124,8 +133,34 @@ export default class JsonToGabcConverter {
         return this.flatStaffRecur(this._data['children']);
     }
 
-    transform(data: string) {
+    importData(data: string) {
         this._data = JSON.parse(data);
+    }
+
+    transform(data: string): string {
+        this.importData(data)
+        console.log("Data length: ", JSON.stringify(this._data).length)
+        const lines = this.getFlatStaffs();
+        const l = lines.reduce((out: any, lineContent: any) => {
+            if (lineContent['kind'] === "ParatextContainer") return "";
+            return [...out, lineContent['children'].reduce((out2: any, syl: any) => {
+                return [...out2, this.transform_syllable(syl)]
+            }, [])];
+        }, [])
+        //console.log(l.flat(4));
+        return "";
+    }
+
+    transform_file(path: string) {
+        fs.readFile(path, "utf-8", (error, text) => {
+            console.log(text)
+            if (!error) {
+                this.dataOut = this.transform(text);
+            } else {
+                console.error("Node FS Error. Couldn't read file.")
+                return false;
+            }
+        })
     }
 
 

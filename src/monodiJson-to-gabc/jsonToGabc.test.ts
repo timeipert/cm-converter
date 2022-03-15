@@ -36,20 +36,20 @@ annotation: 20
 `);
         });
     })
-    describe('to_gregorio_char', () => {
+    describe('transform_note', () => {
         it('should return the right character when clef change is not needed', () => {
-            const char1 = doc.to_gregorio_char("a", 0, 1);
+            const char1 = doc.transform_note("a", 3, 1);
             expect(char1['char']).to.equal("a");
             expect(char1['clef_change']).to.be.false;
-            const char2 = doc.to_gregorio_char("d", 1, 1);
-            expect(char2['char']).to.equal("k");
+            const char2 = doc.transform_note("d", 4, 1);
+            expect(char2['char']).to.equal("d");
             expect(char2['clef_change']).to.be.false;
         });
         it('should return the right character when clef change is needed', () => {
-            const char3 = doc.to_gregorio_char("g", 1, 1);
+            const char3 = doc.transform_note("g", 5, 1);
             expect(char3['char']).to.equal("h");
             expect(char3['clef_change']).to.be.true;
-            const char4 = doc.to_gregorio_char("e", 1, 3);
+            const char4 = doc.transform_note("e", 5, 3);
             expect(char4['char']).to.equal("h");
             expect(char4['clef_change']).to.be.false;
         })
@@ -84,7 +84,7 @@ annotation: 20
                     }
                     ]
             }`;
-            doc.transform(ex);
+            doc.importData(ex);
             const out = JSON.stringify(doc.getFlatStaffs());
             expect(out).to.equal(JSON.stringify([{
                 "uuid": "112eef3a-f25a-44ec-a116-00cd75020c22",
