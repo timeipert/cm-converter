@@ -21,14 +21,6 @@ describe('Gatbc Model', function () {
             (0, chai_1.expect)(char2['char']).to.equal("d");
             (0, chai_1.expect)(char2['clef_change']).to.be["false"];
         });
-        it('should return the right character when clef change is needed', function () {
-            var char3 = doc.transform_note("g", 5, 1);
-            (0, chai_1.expect)(char3['char']).to.equal("h");
-            (0, chai_1.expect)(char3['clef_change']).to.be["true"];
-            var char4 = doc.transform_note("e", 5, 3);
-            (0, chai_1.expect)(char4['char']).to.equal("h");
-            (0, chai_1.expect)(char4['clef_change']).to.be["false"];
-        });
     });
     describe('getFlatStaffs', function () {
         it('should flat with 1 level', function () {

@@ -6,6 +6,7 @@ export default class JsonToGabcConverter {
     hasHeader = false;
     positionInAlphabet;
     existsZeileContainer;
+    currentClef = 2;
 
     constructor() {
         this.positionInAlphabet = (position_input_alphabet: number, octave: number,
@@ -15,6 +16,25 @@ export default class JsonToGabcConverter {
             .map((e: any) => e['kind'] === "ZeileContainer")
             .filter((e: boolean) => e).length !== 0;
 
+    }
+
+    mode(array: any) {
+        if (array.length == 0)
+            return null;
+        const modeMap: any = {};
+        let maxEl = array[0], maxCount = 1;
+        for (let i = 0; i < array.length; i++) {
+            const el = array[i];
+            if (modeMap[el] === null)
+                modeMap[el] = 1;
+            else
+                modeMap[el] += 1;
+            if (modeMap[el] > maxCount) {
+                maxEl = el;
+                maxCount = modeMap[el];
+            }
+        }
+        return maxEl;
     }
 
 
@@ -78,42 +98,52 @@ export default class JsonToGabcConverter {
 
         const position_ratings = other_positions.map(d => Math.abs(d - (gregorio_alphabet.length / 2)));
         const best_clef = other_clefs[position_ratings.indexOf(Math.min(...position_ratings))];
-        console.log("Best clef: ", best_clef)
+        ////console.log("Best clef: ", best_clef)
         const position_in_greg_bc = this.positionInAlphabet(position_of_ps, octave, monodi_alphabet, best_clef);
-        console.log("Position in greg: ", position_in_greg_bc);
+        ////console.log("Position in greg: ", position_in_greg_bc);
         return {clef_change: true, clef: best_clef, char: gregorio_alphabet[position_in_greg_bc]};
     }
 
     // clef position from top line 1 - 4
-    transform_note(pitch_symbol: string, octave: number, clef_position: number = 2) {
+    transform_note(pitch_symbol: string, octave: number, clef_position: number = this.currentClef) {
         const gregorio_alphabet = "abcdefghijklm";
         const monodi_alphabet = "cdefgab";
 
 
         const position_of_ps = monodi_alphabet.indexOf(pitch_symbol);
         const position_in_greg = this.positionInAlphabet(position_of_ps, octave, monodi_alphabet, clef_position);
-        if (position_in_greg < 0 || position_in_greg >= gregorio_alphabet.length) {
+        /*if (position_in_greg < 0 || position_in_greg >= gregorio_alphabet.length) {
             return this.find_other_clef(clef_position, position_of_ps, octave, monodi_alphabet, gregorio_alphabet);
-        } else {
-            return {clef_change: false, clef: clef_position, char: gregorio_alphabet[position_in_greg]};
-        }
+        } else {*/
+        return {clef_change: false, clef: clef_position, char: gregorio_alphabet[position_in_greg]};
+        /*}*/
     }
 
     transform_syllable(syllable: any) {
-        const text = syllable['text'].replace("-", "").replace(" ", "");
-        const wordWhitespace = syllable['text'].match("-") ? "" : " ";
-        const notation = syllable['notes']['spaced'].map((spaced: any) => {
-            return spaced['nonSpaced'].map((nonspaced: any) => {
-                return nonspaced['grouped'].map((grouped: any) => {
-                    return this.transform_note(grouped['base'].toLowerCase(), grouped['octave'])
-                })
-            })
-        });
-        const notes = notation.flat(3).map((d: any) => d.char);
-        const clef = notation.flat(3).map((d: any) => d.clef);
+        let text, wordWhitespace;
+        if (Object.keys(syllable).indexOf('text') === -1 || syllable.kind === "FolioChange") {
+            text = "";
+            wordWhitespace = "";
+            return "";
+        } else {
+            text = syllable['text'].replace("-", "").replace(" ", "");
+            wordWhitespace = syllable['text'].match("-") ? "" : " ";
+        }
 
-        console.log(text, clef, notes);
-        return `${text}(${notes.join("")})${wordWhitespace}`;
+        const notation = syllable?.notes?.spaced.map((spaced: any) => {
+            return ["/", ...spaced?.nonSpaced?.map((nonspaced: any) => {
+                return ["!", ...nonspaced?.grouped?.map((grouped: any) => {
+                    return this.transform_note(grouped?.base.toLowerCase(), grouped?.octave)
+                })]
+            })]
+        });
+        const notes = notation?.flat(3)?.map((d: any) => d.char || "/"  || "!");
+        const clef = notation?.flat(3)?.map((d: any) => d.clef || "/"  || "!");
+
+
+        //console.log(text, clef, notes);
+        const noteSequence = notes?.join("").replace(/^\/\//, "")
+        return `${text}(${noteSequence})${wordWhitespace}`;
     }
 
 
@@ -123,6 +153,7 @@ export default class JsonToGabcConverter {
     }
 
     flatStaffRecur(d: any): any {
+        if (!d) return []
         if (this.existsZeileContainer(d)) {
             return d;
         } else {
@@ -143,7 +174,7 @@ export default class JsonToGabcConverter {
 
     transform(data: string): string {
         this.importData(data)
-        console.log("Data length: ", JSON.stringify(this._data).length)
+        //console.log("Data length: ", JSON.stringify(this._data).length)
         const lines = this.getFlatStaffs();
         const l = lines.reduce((out: any, lineContent: any) => {
             if (lineContent['kind'] === "ParatextContainer") return "";
@@ -155,11 +186,18 @@ export default class JsonToGabcConverter {
         return l.flat().join("");
     }
 
-    transform_file(path: string) {
-        fs.readFile(path, "utf-8", (error, text) => {
-            console.log(text)
+    transform_file(inputFilePath: string, outputFolder: string) {
+        fs.readFile(inputFilePath, "utf-8", (error, text) => {
+            //console.log(text)
             if (!error) {
                 this.dataOut = this.transform(text);
+                const outputFile = inputFilePath.replace(/.*\/(.*?)\.json/, "$1.gabc")
+                fs.writeFile(outputFolder + outputFile, this.dataOut, (error) => {
+                    if (error) {
+                        console.error("Error: Couldn't write file", error);
+                        return false;
+                    }
+                })
             } else {
                 console.error("Node FS Error. Couldn't read file.")
                 return false;

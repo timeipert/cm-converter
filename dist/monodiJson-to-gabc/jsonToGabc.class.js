@@ -14,6 +14,7 @@ var JsonToGabcConverter = (function () {
     function JsonToGabcConverter() {
         this._data = "";
         this.hasHeader = false;
+        this.currentClef = 2;
         this.positionInAlphabet = function (position_input_alphabet, octave, input_alphabet, clef_position) {
             return position_input_alphabet + ((octave - 4) * input_alphabet.length) - ((clef_position - 1) * 2) + 2;
         };
@@ -21,6 +22,24 @@ var JsonToGabcConverter = (function () {
             .map(function (e) { return e['kind'] === "ZeileContainer"; })
             .filter(function (e) { return e; }).length !== 0; };
     }
+    JsonToGabcConverter.prototype.mode = function (array) {
+        if (array.length == 0)
+            return null;
+        var modeMap = {};
+        var maxEl = array[0], maxCount = 1;
+        for (var i = 0; i < array.length; i++) {
+            var el = array[i];
+            if (modeMap[el] === null)
+                modeMap[el] = 1;
+            else
+                modeMap[el] += 1;
+            if (modeMap[el] > maxCount) {
+                maxEl = el;
+                maxCount = modeMap[el];
+            }
+        }
+        return maxEl;
+    };
     JsonToGabcConverter.prototype.create_header = function (name, gabcCopyright, scoreCopyright, officePart, occasion, meter, commentary, arranger, author, date, manuscript, manuscriptReference, manuscriptStoragePlace, book, language, transcriber, transcriptionDate, mode, userNotes, annotation) {
         if (gabcCopyright === void 0) { gabcCopyright = ""; }
         if (scoreCopyright === void 0) { scoreCopyright = ""; }
@@ -79,39 +98,43 @@ var JsonToGabcConverter = (function () {
         });
         var position_ratings = other_positions.map(function (d) { return Math.abs(d - (gregorio_alphabet.length / 2)); });
         var best_clef = other_clefs[position_ratings.indexOf(Math.min.apply(Math, position_ratings))];
-        console.log("Best clef: ", best_clef);
         var position_in_greg_bc = this.positionInAlphabet(position_of_ps, octave, monodi_alphabet, best_clef);
-        console.log("Position in greg: ", position_in_greg_bc);
         return { clef_change: true, clef: best_clef, char: gregorio_alphabet[position_in_greg_bc] };
     };
     JsonToGabcConverter.prototype.transform_note = function (pitch_symbol, octave, clef_position) {
-        if (clef_position === void 0) { clef_position = 2; }
+        if (clef_position === void 0) { clef_position = this.currentClef; }
         var gregorio_alphabet = "abcdefghijklm";
         var monodi_alphabet = "cdefgab";
         var position_of_ps = monodi_alphabet.indexOf(pitch_symbol);
         var position_in_greg = this.positionInAlphabet(position_of_ps, octave, monodi_alphabet, clef_position);
-        if (position_in_greg < 0 || position_in_greg >= gregorio_alphabet.length) {
-            return this.find_other_clef(clef_position, position_of_ps, octave, monodi_alphabet, gregorio_alphabet);
-        }
-        else {
-            return { clef_change: false, clef: clef_position, char: gregorio_alphabet[position_in_greg] };
-        }
+        return { clef_change: false, clef: clef_position, char: gregorio_alphabet[position_in_greg] };
     };
     JsonToGabcConverter.prototype.transform_syllable = function (syllable) {
         var _this = this;
-        var text = syllable['text'].replace("-", "").replace(" ", "");
-        var wordWhitespace = syllable['text'].match("-") ? "" : " ";
-        var notation = syllable['notes']['spaced'].map(function (spaced) {
-            return spaced['nonSpaced'].map(function (nonspaced) {
-                return nonspaced['grouped'].map(function (grouped) {
-                    return _this.transform_note(grouped['base'].toLowerCase(), grouped['octave']);
-                });
-            });
+        var _a, _b, _c;
+        var text, wordWhitespace;
+        if (Object.keys(syllable).indexOf('text') === -1 || syllable.kind === "FolioChange") {
+            text = "";
+            wordWhitespace = "";
+            return "";
+        }
+        else {
+            text = syllable['text'].replace("-", "").replace(" ", "");
+            wordWhitespace = syllable['text'].match("-") ? "" : " ";
+        }
+        var notation = (_a = syllable === null || syllable === void 0 ? void 0 : syllable.notes) === null || _a === void 0 ? void 0 : _a.spaced.map(function (spaced) {
+            var _a;
+            return __spreadArray(["/"], (_a = spaced === null || spaced === void 0 ? void 0 : spaced.nonSpaced) === null || _a === void 0 ? void 0 : _a.map(function (nonspaced) {
+                var _a;
+                return __spreadArray(["!"], (_a = nonspaced === null || nonspaced === void 0 ? void 0 : nonspaced.grouped) === null || _a === void 0 ? void 0 : _a.map(function (grouped) {
+                    return _this.transform_note(grouped === null || grouped === void 0 ? void 0 : grouped.base.toLowerCase(), grouped === null || grouped === void 0 ? void 0 : grouped.octave);
+                }), true);
+            }), true);
         });
-        var notes = notation.flat(3).map(function (d) { return d.char; });
-        var clef = notation.flat(3).map(function (d) { return d.clef; });
-        console.log(text, clef, notes);
-        return "".concat(text, "(").concat(notes.join(""), ")").concat(wordWhitespace);
+        var notes = (_b = notation === null || notation === void 0 ? void 0 : notation.flat(3)) === null || _b === void 0 ? void 0 : _b.map(function (d) { return d.char || "/" || "!"; });
+        var clef = (_c = notation === null || notation === void 0 ? void 0 : notation.flat(3)) === null || _c === void 0 ? void 0 : _c.map(function (d) { return d.clef || "/" || "!"; });
+        var noteSequence = notes === null || notes === void 0 ? void 0 : notes.join("").replace(/^\/\//, "");
+        return "".concat(text, "(").concat(noteSequence, ")").concat(wordWhitespace);
     };
     Object.defineProperty(JsonToGabcConverter.prototype, "data", {
         get: function () {
@@ -122,6 +145,8 @@ var JsonToGabcConverter = (function () {
     });
     JsonToGabcConverter.prototype.flatStaffRecur = function (d) {
         var _this = this;
+        if (!d)
+            return [];
         if (this.existsZeileContainer(d)) {
             return d;
         }
@@ -141,7 +166,6 @@ var JsonToGabcConverter = (function () {
     JsonToGabcConverter.prototype.transform = function (data) {
         var _this = this;
         this.importData(data);
-        console.log("Data length: ", JSON.stringify(this._data).length);
         var lines = this.getFlatStaffs();
         var l = lines.reduce(function (out, lineContent) {
             if (lineContent['kind'] === "ParatextContainer")
@@ -152,12 +176,18 @@ var JsonToGabcConverter = (function () {
         }, []);
         return l.flat().join("");
     };
-    JsonToGabcConverter.prototype.transform_file = function (path) {
+    JsonToGabcConverter.prototype.transform_file = function (inputFilePath, outputFolder) {
         var _this = this;
-        fs.readFile(path, "utf-8", function (error, text) {
-            console.log(text);
+        fs.readFile(inputFilePath, "utf-8", function (error, text) {
             if (!error) {
                 _this.dataOut = _this.transform(text);
+                var outputFile = inputFilePath.replace(/.*\/(.*?)\.json/, "$1.gabc");
+                fs.writeFile(outputFolder + outputFile, _this.dataOut, function (error) {
+                    if (error) {
+                        console.error("Error: Couldn't write file", error);
+                        return false;
+                    }
+                });
             }
             else {
                 console.error("Node FS Error. Couldn't read file.");
