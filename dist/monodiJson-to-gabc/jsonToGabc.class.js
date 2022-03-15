@@ -182,7 +182,7 @@ var JsonToGabcConverter = (function () {
             if (!error) {
                 _this.dataOut = _this.transform(text);
                 var outputFile = inputFilePath.replace(/.*\/(.*?)\.json/, "$1.gabc");
-                fs.writeFile(outputFolder + outputFile, _this.dataOut, function (error) {
+                fs.writeFile(outputFolder + "/" + outputFile, _this.dataOut, function (error) {
                     if (error) {
                         console.error("Error: Couldn't write file", error);
                         return false;
