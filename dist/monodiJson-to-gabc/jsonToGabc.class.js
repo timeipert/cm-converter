@@ -165,7 +165,9 @@ var JsonToGabcConverter = (function () {
     };
     JsonToGabcConverter.prototype.transform = function (data) {
         var _this = this;
+        var _a;
         this.importData(data);
+        console.log("Data length: ", JSON.stringify(this._data).length);
         var lines = this.getFlatStaffs();
         var l = lines.reduce(function (out, lineContent) {
             if (lineContent['kind'] === "ParatextContainer")
@@ -174,13 +176,23 @@ var JsonToGabcConverter = (function () {
                     return __spreadArray(__spreadArray([], out2, true), [_this.transform_syllable(syl)], false);
                 }, [])], false);
         }, []);
-        return l.flat().join("");
+        var clefPref = "(c3)\n";
+        try {
+            return [clefPref, (_a = l === null || l === void 0 ? void 0 : l.flat()) === null || _a === void 0 ? void 0 : _a.join("")].join("");
+        }
+        catch (e) {
+            console.log(e);
+        }
     };
     JsonToGabcConverter.prototype.transform_file = function (inputFilePath, outputFolder) {
         var _this = this;
         fs.readFile(inputFilePath, "utf-8", function (error, text) {
             if (!error) {
                 _this.dataOut = _this.transform(text);
+                if (!_this.dataOut) {
+                    console.log("Error: data undefined");
+                    return false;
+                }
                 var outputFile = inputFilePath.replace(/.*\/(.*?)\.json/, "$1.gabc");
                 fs.writeFile(outputFolder + "/" + outputFile, _this.dataOut, function (error) {
                     if (error) {

@@ -29,7 +29,7 @@ var getArguments = function () {
 };
 var convertFolder = function (inputFolder, outputFolder) {
     var files = getFiles(inputFolder).filter(function (f) {
-        return f.match(/\.json$/);
+        return f.match(/data\.json$/);
     }).map(function (f) {
         var folders = f.split("/");
         var file = folders.pop();

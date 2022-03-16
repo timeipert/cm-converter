@@ -1,14 +1,14 @@
 import GabcDocument from './jsonToGabc.class';
-import ErrnoException = NodeJS.ErrnoException;
 
-const {promisify} = require('util');
-const {resolve} = require('path');
 const fs = require('fs');
-const readdir = promisify(fs.readdir);
-const stat = promisify(fs.stat);
 const path = require('path');
 
-
+/**
+ * Get command line arguments and pack into object so that:
+ * node *.js name=value
+ * =>
+ * {name: value}
+ */
 const getArguments = () => {
     const args = process.argv.slice(2);
     return args.reduce((obj: any, d: string) => {
@@ -18,9 +18,13 @@ const getArguments = () => {
         return returnObj;
     }, {});
 }
-const convertFolder = (inputFolder: string, outputFolder: string) => {
+
+/**
+ * Converts the whole content of a folder recursively and writes it to outputFolder. Folder structure remains.
+ */
+const convertFolder = (inputFolder: string, outputFolder: string, filenameRegex: RegExp = /data\.json$/) => {
     const files = getFiles(inputFolder).filter((f: string) =>
-        f.match(/\.json$/)).map((f: string) => {
+        f.match(filenameRegex)).map((f: string) => {
         const folders = f.split("/");
         const file = folders.pop();
         return {folders: folders.join("/"), file};
@@ -38,12 +42,17 @@ const convertFolder = (inputFolder: string, outputFolder: string) => {
     });
 }
 
+/**
+ * Converts one file and writes it to outputFolder
+ */
 const convertFile = (filePath: string, outputFolder: string) => {
     const doc = new GabcDocument();
     doc.transform_file(filePath, outputFolder);
 }
 
-
+/**
+ * Get list of files recursively
+ */
 function getFiles(root: any, files: any = [], prefix: any = '') {
     prefix = prefix || ''
     files = files || []
@@ -60,7 +69,9 @@ function getFiles(root: any, files: any = [], prefix: any = '') {
     return files
 }
 
-
+/**
+ * main entry point
+ */
 const args = getArguments();
 if (Object.keys(args).indexOf("inputFolder") !== -1) {
     if (Object.keys(args).indexOf("outputFolder") !== -1) {

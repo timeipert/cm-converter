@@ -18,26 +18,9 @@ export default class JsonToGabcConverter {
 
     }
 
-    mode(array: any) {
-        if (array.length == 0)
-            return null;
-        const modeMap: any = {};
-        let maxEl = array[0], maxCount = 1;
-        for (let i = 0; i < array.length; i++) {
-            const el = array[i];
-            if (modeMap[el] === null)
-                modeMap[el] = 1;
-            else
-                modeMap[el] += 1;
-            if (modeMap[el] > maxCount) {
-                maxEl = el;
-                maxCount = modeMap[el];
-            }
-        }
-        return maxEl;
-    }
-
-
+    /**
+    * Creates Header (not used yet)
+     */
     create_header(name: string, gabcCopyright: string = "",
                   scoreCopyright: string = "",
                   officePart: string = "",
@@ -89,6 +72,10 @@ export default class JsonToGabcConverter {
         return true;
     }
 
+
+    /**
+    * finds best clef position (not used yet)
+     */
     find_other_clef(clef_position: number, position_of_ps: number,
                     octave: number, monodi_alphabet: string, gregorio_alphabet: string) {
         const other_clefs = [1, 2, 3, 4].filter((d) => d !== clef_position);
@@ -104,7 +91,10 @@ export default class JsonToGabcConverter {
         return {clef_change: true, clef: best_clef, char: gregorio_alphabet[position_in_greg_bc]};
     }
 
-    // clef position from top line 1 - 4
+    /**
+    * Gets gabc symbol from pitch/octave combination + clef offset.
+     * clef position from top line 1 - 4
+     */
     transform_note(pitch_symbol: string, octave: number, clef_position: number = this.currentClef) {
         const gregorio_alphabet = "abcdefghijklm";
         const monodi_alphabet = "cdefgab";
@@ -119,6 +109,9 @@ export default class JsonToGabcConverter {
         /*}*/
     }
 
+    /**
+    * Transforms Syllable Object into gabc string.
+     */
     transform_syllable(syllable: any) {
         let text, wordWhitespace;
         if (Object.keys(syllable).indexOf('text') === -1 || syllable.kind === "FolioChange") {
@@ -137,8 +130,8 @@ export default class JsonToGabcConverter {
                 })]
             })]
         });
-        const notes = notation?.flat(3)?.map((d: any) => d.char || "/"  || "!");
-        const clef = notation?.flat(3)?.map((d: any) => d.clef || "/"  || "!");
+        const notes = notation?.flat(3)?.map((d: any) => d.char || "/" || "!");
+        const clef = notation?.flat(3)?.map((d: any) => d.clef || "/" || "!");
 
 
         //console.log(text, clef, notes);
@@ -152,6 +145,9 @@ export default class JsonToGabcConverter {
         return this._data
     }
 
+    /**
+    * Flattening structure to staff object recursively
+     */
     flatStaffRecur(d: any): any {
         if (!d) return []
         if (this.existsZeileContainer(d)) {
@@ -164,35 +160,55 @@ export default class JsonToGabcConverter {
         }
     }
 
+    /**
+    * Gets staff object without structure
+     */
     getFlatStaffs() {
         return this.flatStaffRecur(this._data['children']);
     }
 
+    /**
+    * Imports data into class
+     */
     importData(data: string) {
         this._data = JSON.parse(data);
     }
 
+    /**
+    * Transforms the whole document.
+     */
     transform(data: string): string {
         this.importData(data)
-        //console.log("Data length: ", JSON.stringify(this._data).length)
+        console.log("Data length: ", JSON.stringify(this._data).length)
         const lines = this.getFlatStaffs();
         const l = lines.reduce((out: any, lineContent: any) => {
             if (lineContent['kind'] === "ParatextContainer") return "";
             return [...out, lineContent['children'].reduce((out2: any, syl: any) => {
-
                 return [...out2, this.transform_syllable(syl)]
             }, [])];
         }, [])
-        return l.flat().join("");
+        const clefPref = `(c3)\n`;
+        try {
+            return [clefPref, l?.flat()?.join("")].join("");
+        } catch (e) {
+            console.log(e);
+        }
     }
 
+    /**
+    * Open file, transform content, write file.
+     */
     transform_file(inputFilePath: string, outputFolder: string) {
         fs.readFile(inputFilePath, "utf-8", (error, text) => {
             //console.log(text)
             if (!error) {
                 this.dataOut = this.transform(text);
+                if (!this.dataOut) {
+                    console.log("Error: data undefined")
+                    return false;
+                }
                 const outputFile = inputFilePath.replace(/.*\/(.*?)\.json/, "$1.gabc")
-                fs.writeFile(outputFolder + outputFile, this.dataOut, (error) => {
+                fs.writeFile(outputFolder + "/" + outputFile, this.dataOut, (error) => {
                     if (error) {
                         console.error("Error: Couldn't write file", error);
                         return false;
