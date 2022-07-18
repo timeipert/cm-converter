@@ -1,4 +1,4 @@
-import GabcDocument from './jsonToGabc.class';
+import GabcDocument from './converter.class';
 import {expect, assert} from 'chai';
 import 'mocha';
 

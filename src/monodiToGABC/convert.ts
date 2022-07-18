@@ -1,4 +1,4 @@
-import GabcDocument from './jsonToGabc.class';
+import GabcDocument from './converter.class';
 
 const fs = require('fs');
 const path = require('path');
@@ -71,10 +71,12 @@ function getFiles(root: any, files: any = [], prefix: any = '') {
 
 /**
  * main entry point
+ *
  */
 const args = getArguments();
-if (Object.keys(args).indexOf("inputFolder") !== -1) {
-    if (Object.keys(args).indexOf("outputFolder") !== -1) {
-        convertFolder(args['inputFolder'], args['outputFolder'])
+if (Object.keys(args).indexOf("i") !== -1) {
+
+    if (Object.keys(args).indexOf("o") !== -1) {
+        convertFolder(args['i'], args['o'])
     }
 }
